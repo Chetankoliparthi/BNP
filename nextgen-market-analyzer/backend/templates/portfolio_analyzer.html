@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}Portfolio Analysis Results{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <h2 class="text-2xl font-bold text-gray-800">Your Portfolio Analysis</h2>
+    <p class="text-gray-600">Based on the {{ results.num_funds }} funds you provided with a total value of ${{ "{:,.0f}".format(results.total_value) }}.</p>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+    <div class="bg-white p-6 rounded-lg shadow text-center">
+        <h4 class="font-semibold text-gray-700">Fund Overlap Score</h4>
+        <p class="text-4xl font-bold text-blue-600 my-2">{{ results.overlap_score|round(1) }}<span class="text-2xl text-gray-500">/100</span></p>
+        <p class="text-xs text-gray-500">Measures similarity between funds. Higher is better.</p>
+    </div>
+    <div class="bg-white p-6 rounded-lg shadow text-center">
+        <h4 class="font-semibold text-gray-700">Sector Score</h4>
+        <p class="text-4xl font-bold text-green-600 my-2">{{ results.sector_score|round(1) }}<span class="text-2xl text-gray-500">/100</span></p>
+        <p class="text-xs text-gray-500">Measures diversification across sectors. Higher is better.</p>
+    </div>
+    <div class="bg-white p-6 rounded-lg shadow text-center border-2 border-indigo-600">
+        <h4 class="font-semibold text-indigo-700">Final Diversification Score</h4>
+        <p class="text-4xl font-bold text-indigo-600 my-2">{{ results.final_score|round(1) }}<span class="text-2xl text-gray-500">/100</span></p>
+        <p class="text-xs text-gray-500">A combined measure of your portfolio's health.</p>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="lg:col-span-2 space-y-6">
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h3 class="font-semibold text-lg text-gray-800 mb-4">Overall Sector Exposure</h3>
+             <div class="flex flex-col md:flex-row gap-6 items-center">
+                <div class="relative w-40 h-40">
+                    <svg class="w-full h-full" viewBox="0 0 36 36"><path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#e5e7eb" stroke-width="3"></path></svg>
+                    <div class="absolute inset-0 flex items-center justify-center flex-col">
+                        <span class="text-3xl font-bold">{{ results.final_score|round(0) }}</span>
+                        <span class="text-sm text-gray-500">Score</span>
+                    </div>
+                </div>
+                <div class="flex-1 w-full">
+                    <h4 class="font-semibold mb-2">Sector Mix</h4>
+                    <ul class="space-y-2 text-sm text-gray-600">
+                        {% for sector, weight in results.weighted_sectors.items()|sort(attribute='1', reverse=true) %}
+                        <li class="flex items-center justify-between">
+                            <span>{{ sector }}</span>
+                            <span class="font-medium text-gray-800">{{ (weight * 100)|round(1) }}%</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h3 class="font-semibold text-lg text-gray-800 mb-4">Performance Metrics</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
+                <div><p class="text-gray-500 text-sm">Total Returns</p><p class="text-2xl font-bold text-gray-800">-</p></div>
+                <div><p class="text-gray-500 text-sm">Volatility</p><p class="text-2xl font-bold text-gray-800">-</p></div>
+                <div><p class="text-gray-500 text-sm">Sharpe Ratio</p><p class="text-2xl font-bold text-gray-800">-</p></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="

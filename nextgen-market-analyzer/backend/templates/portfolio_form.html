@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block title %}Enter Portfolio Data{% endblock %}
+
+{% block content %}
+<div class="bg-white p-6 rounded-lg shadow">
+    <h2 class="text-2xl font-bold text-gray-800 mb-4">Analyze Your Portfolio</h2>
+    <p class="text-gray-600 mb-6">Enter details about your funds and holdings below to calculate your portfolio's diversification score.</p>
+
+    <form id="portfolio-form" action="/analyze-portfolio" method="POST">
+        <div class="mb-6">
+            <label for="num_funds" class="block text-sm font-medium text-gray-700">How many funds do you have?</label>
+            <input type="number" id="num_funds" name="num_funds" min="1" class="mt-1 block w-full md:w-1/4 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
+        </div>
+
+        <div id="funds-container" class="space-y-8">
+            </div>
+
+        <div class="mt-8">
+            <button type="submit" class="bg-blue-600 text-white font-semibold px-6 py-3 rounded-md hover:bg-blue-700">
+                Analyze My Portfolio
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+    document.getElementById('num_funds').addEventListener('change', function(e) {
+        const numFunds = parseInt(e.target.value, 10);
+        const container = document.getElementById('funds-container');
+        container.innerHTML = ''; // Clear previous fields
+
+        if (isNaN(numFunds) || numFunds < 1) return;
+
+        for (let i = 0; i < numFunds; i++) {
+            const fundIndex = i;
+            const fundDiv = document.createElement('div');
+            fundDiv.className = 'border border-gray-200 p-4 rounded-lg';
+            fundDiv.innerHTML = `
+                <h3 class="text-lg font-semibold text-gray-700 mb-4">Fund ${fundIndex + 1}</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="fund-${fundIndex}-amount" class="block text-sm font-medium text-gray-700">Fund Amount (e.g., 100000)</label>
+                        <input type="number" name="fund-${fundIndex}-amount" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                    </div>
+                </div>
+                <div id="holdings-container-${fundIndex}" class="mt-4 space-y-2">
+                    <h4 class="text-md font-medium text-gray-700">Holdings</h4>
+                    </div>
+                <button type="button" onclick="addHolding(${fundIndex})" class="mt-2 text-sm text-blue-600 font-semibold hover:text-blue-800">+ Add Holding</button>
+            `;
+            container.appendChild(fundDiv);
+            addHolding(fundIndex); // Add the first holding field by default
+        }
+    });
+
+    let holdingCounters = {};
+
+    function addHolding(fundIndex) {
+        if (holdingCounters[fundIndex] === undefined) {
+            holdingCounters[fundIndex] = 0;
+        }
+        const holdingIndex = holdingCounters[fundIndex];
+        const container = document.getElementById(`holdings-container-${fundIndex}`);
+        
+        const holdingDiv = document.createElement('div');
+        holdingDiv.className = 'grid grid-cols-2 gap-2 items-center';
+        holdingDiv.innerHTML = `
+            <input type="text" name="fund-${fundIndex}-holding-${holdingIndex}-ticker" placeholder="Ticker (e.g., INFY)" class="block w-full rounded-md border-gray-300 shadow-sm" required>
+            <input type="number" step="0.01" name="fund-${fundIndex}-holding-${holdingIndex}-weight" placeholder="Weight (e.g., 0.30)" class="block w-full rounded-md border-gray-300 shadow-sm" required>
+        `;
+        container.appendChild(holdingDiv);
+        holdingCounters[fundIndex]++;
+    }
+</script>
+{% endblock %}
