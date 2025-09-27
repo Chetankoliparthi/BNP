@@ -1,4 +1,3 @@
-# backend/portfolio_analyzer.py
 from itertools import combinations
 
 TICKER_TO_SECTOR = {
@@ -10,7 +9,7 @@ TICKER_TO_SECTOR = {
 
 def analyze_portfolio(funds):
     if len(funds) < 2:
-        return {"error": "At least two funds are required to calculate diversification scores."}
+        return {"error": "At least two funds are required for diversification analysis."}
         
     for fund in funds:
         if not fund.get('sectors'):
@@ -42,6 +41,21 @@ def analyze_portfolio(funds):
     sector_score = (1 - hhi) * 100
     final_score = 0.5 * overlap_score + 0.5 * sector_score
 
+    risk_info = {}
+    if final_score >= 75:
+        risk_info['level'] = 'Low Risk'
+        risk_info['bar_color'] = 'bg-green-500'
+        risk_info['badge_color'] = 'bg-green-100 text-green-800'
+    elif 50 <= final_score < 75:
+        risk_info['level'] = 'Moderate'
+        risk_info['bar_color'] = 'bg-amber-500'
+        risk_info['badge_color'] = 'bg-amber-100 text-amber-800'
+    else:
+        risk_info['level'] = 'High Risk'
+        risk_info['bar_color'] = 'bg-red-500'
+        risk_info['badge_color'] = 'bg-red-100 text-red-800'
+
+    # This is the crucial part: assigning a color to each sector
     colors = ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#3b82f6', '#8b5cf6']
     sorted_sectors = sorted(weighted_sector_exposures.items(), key=lambda item: item[1], reverse=True)
     
@@ -56,9 +70,9 @@ def analyze_portfolio(funds):
         "sector_score": sector_score,
         "final_score": final_score,
         "sector_data": sector_data_for_template,
-        "num_funds": len(funds)
+        "num_funds": len(funds),
+        "risk_info": risk_info
     }
-    # This line is the critical fix for the crash
     results["total_value_formatted"] = f"{results['total_value']:,.0f}"
     
     return results

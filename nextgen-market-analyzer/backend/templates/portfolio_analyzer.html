@@ -7,7 +7,7 @@
     <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100">Portfolio Analyzer</h2>
     <p class="text-gray-600 dark:text-gray-400 mb-4">Select a Client ID to view their portfolio analysis.</p>
 
-    <select id="client-selector" class="p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+    <select id="client-selector" class="p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-colors">
         <option value="" disabled {% if not results %}selected{% endif %}>-- Select a Client ID --</option>
         {% for client_id in client_ids %}
             <option value="{{ client_id }}" {% if selected_client_id == client_id %}selected{% endif %}>{{ client_id }}</option>
@@ -19,16 +19,17 @@
     <div class="mb-6"><p class="text-gray-600 dark:text-gray-300">Displaying analysis for Client: <span class="font-semibold text-gray-800 dark:text-white">{{ selected_client_id }}</span></p></div>
     
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow text-center"><h4 class="font-semibold text-gray-700 dark:text-gray-300">Fund Overlap Score</h4><p class="text-4xl font-bold text-blue-600 dark:text-blue-400 my-2">{{ results.overlap_score|round(1) }}<span class="text-2xl text-gray-500 dark:text-gray-400">/100</span></p><p class="text-xs text-gray-500 dark:text-gray-400">Higher is better.</p></div>
-        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow text-center"><h4 class="font-semibold text-gray-700 dark:text-gray-300">Sector Score</h4><p class="text-4xl font-bold text-green-600 dark:text-green-400 my-2">{{ results.sector_score|round(1) }}<span class="text-2xl text-gray-500 dark:text-gray-400">/100</span></p><p class="text-xs text-gray-500 dark:text-gray-400">Higher is better.</p></div>
-        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow text-center border-2 border-indigo-600 dark:border-indigo-400"><h4 class="font-semibold text-indigo-700 dark:text-indigo-300">Final Diversification Score</h4><p class="text-4xl font-bold text-indigo-600 dark:text-indigo-400 my-2">{{ results.final_score|round(1) }}<span class="text-2xl text-gray-500 dark:text-gray-400">/100</span></p><p class="text-xs text-gray-500 dark:text-gray-400">A combined measure.</p></div>
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow text-center transition-colors"><h4 class="font-semibold text-gray-700 dark:text-gray-300">Fund Overlap Score</h4><p class="text-4xl font-bold text-blue-600 dark:text-blue-400 my-2">{{ results.overlap_score|round(1) }}<span class="text-2xl text-gray-500 dark:text-gray-400">/100</span></p><p class="text-xs text-gray-500 dark:text-gray-400">Higher is better.</p></div>
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow text-center transition-colors"><h4 class="font-semibold text-gray-700 dark:text-gray-300">Sector Score</h4><p class="text-4xl font-bold text-green-600 dark:text-green-400 my-2">{{ results.sector_score|round(1) }}<span class="text-2xl text-gray-500 dark:text-gray-400">/100</span></p><p class="text-xs text-gray-500 dark:text-gray-400">Higher is better.</p></div>
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow text-center border-2 border-indigo-600 dark:border-indigo-400 transition-colors"><h4 class="font-semibold text-indigo-700 dark:text-indigo-300">Final Diversification Score</h4><p class="text-4xl font-bold text-indigo-600 dark:text-indigo-400 my-2">{{ results.final_score|round(1) }}<span class="text-2xl text-gray-500 dark:text-gray-400">/100</span></p><p class="text-xs text-gray-500 dark:text-gray-400">A combined measure.</p></div>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div class="lg:col-span-2 space-y-6">
-            <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow transition-colors">
                 <h3 class="font-semibold text-lg text-gray-800 dark:text-gray-100 mb-4">Overall Sector Exposure</h3>
                  <div class="flex flex-col md:flex-row gap-6 items-center">
+                    
                     {% set circumference = 2 * 22/7 * 15.9155 %}
                     {% set offset = 0 %}
                     <div class="relative w-40 h-40">
@@ -56,7 +57,7 @@
                         <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-300">
                             {% for sector in results.sector_data %}
                             <li class="flex items-center justify-between">
-                                <span><span class="inline-block w-3 h-3 rounded-full mr-2" style="background-color: whitesmoke"></span>{{ sector.name }}</span>
+                                <span><span class="inline-block w-3 h-3 rounded-full mr-2" style="background-color:whitesmoke"></span>{{ sector.name }}</span>
                                 <span class="font-medium text-gray-800 dark:text-gray-100">{{ (sector.weight * 100)|round(1) }}%</span>
                             </li>
                             {% endfor %}
@@ -66,12 +67,14 @@
             </div>
         </div>
         <div class="lg:col-span-1 space-y-6">
-            <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow transition-colors">
                 <h3 class="font-semibold text-lg text-gray-800 dark:text-gray-100">Risk Level</h3>
-                <span class="text-sm font-medium bg-amber-100 text-amber-800 px-2 py-1 rounded-full">Moderate</span>
+                <span class="text-sm font-medium px-2 py-1 rounded-full {{ results.risk_info.badge_color }}">
+                    {{ results.risk_info.level }}
+                </span>
                 <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">Diversification Score</p>
                 <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 mt-1">
-                    <div class="bg-amber-400 h-2.5 rounded-full" style="width: 100"></div>
+                    <div class="h-2.5 rounded-full transition-all duration-500 {{ results.risk_info.bar_color }}" style="width: 100"></div>
                 </div>
                 <p class="text-right font-bold text-gray-700 dark:text-gray-300">{{ results.final_score|round(1) }}/100</p>
             </div>
