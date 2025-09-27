@@ -5,7 +5,7 @@
 {% block content %}
 <div class="mb-6">
     <h2 class="text-2xl font-bold text-gray-800">Your Portfolio Analysis</h2>
-    <p class="text-gray-600">Based on the {{ results.num_funds }} funds you provided with a total value of ${{ "{:,.0f}".format(results.total_value) }}.</p>
+    <p class="text-gray-600">Based on the {{ results.num_funds }} funds you provided with a total value of ${{ results.total_value_formatted }}.</p>
 </div>
 
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
@@ -62,4 +62,29 @@
         </div>
     </div>
 
-    <div class="
+    <div class="lg:col-span-1 space-y-6">
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h3 class="font-semibold text-lg text-gray-800">Risk Level</h3>
+            <span class="text-sm font-medium bg-amber-100 text-amber-800 px-2 py-1 rounded-full">Moderate</span>
+            <p class="text-sm text-gray-500 mt-2">Diversification Score</p>
+            <div class="w-full bg-gray-200 rounded-full h-2.5 mt-1">
+                <div class="bg-amber-400 h-2.5 rounded-full" style="width: {{ results.final_score }}%"></div>
+            <p class="text-right font-bold text-gray-700">{{ results.final_score|round(1) }}/100</p>
+        </div>
+        
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h3 class="font-semibold text-lg text-gray-800 mb-4">AI Recommendations</h3>
+            <ul class="space-y-4">
+                <li class="flex items-start space-x-3">
+                    <svg class="w-5 h-5 text-blue-500 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h5M20 20v-5h-5M4 20h5v-5M20 4h-5v5"></path></svg>
+                    <div><h4 class="font-medium">Rebalance Holdings</h4><p class="text-sm text-gray-500">Consider diversifying into other sectors to reduce concentration risk.</p></div>
+                </li>
+                <li class="flex items-start space-x-3">
+                    <svg class="w-5 h-5 text-green-500 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                    <div><h4 class="font-medium">Monitor Overlap</h4><p class="text-sm text-gray-500">Your funds have a moderate overlap. Be mindful of this when adding new funds.</p></div>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
