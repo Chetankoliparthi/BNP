@@ -6,32 +6,30 @@
     <title>{% block title %}NextGen Market Analyzer{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Simple style for the active navigation link */
-        .nav-link-active {
-            border-bottom: 2px solid #2563eb; /* blue-600 */
-            color: #1f2937; /* gray-800 */
-        }
+        .nav-link-active { border-bottom: 2px solid #2563eb; color: #1f2937; }
+        .dark .nav-link-active { color: #f9fafb; }
     </style>
 </head>
-<body class="bg-gray-100">
+<body class="bg-gray-100 dark:bg-gray-900 transition-colors duration-300">
 
-    <header class="bg-white shadow-sm">
+    <header class="bg-white dark:bg-gray-800 shadow-sm">
         <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
             <div class="flex items-center space-x-8">
-                <a href="/" class="text-xl font-bold text-gray-800 flex items-center">
+                <a href="{{ url_for('stock_evaluator_page') }}" class="text-xl font-bold text-gray-800 dark:text-white flex items-center">
                     <span class="bg-gray-900 text-white w-8 h-8 flex items-center justify-center rounded-md mr-2">N</span>
                     NextGen Analyzer
                 </a>
                 <div class="hidden md:flex items-center space-x-6">
-                    <a id="nav-portfolio" href="/portfolio" class="text-gray-500 font-semibold hover:text-gray-800">Portfolio Analyzer</a>
-                    <a id="nav-stock" href="/stock-evaluator" class="text-gray-500 font-semibold hover:text-gray-800">Stock Evaluator</a>
+                    <a id="nav-portfolio" href="{{ url_for('portfolio_analyzer_page') }}" class="text-gray-500 dark:text-gray-300 font-semibold hover:text-gray-800 dark:hover:text-white">Portfolio Analyzer</a>
+                    <a id="nav-stock" href="{{ url_for('stock_evaluator_page') }}" class="text-gray-500 dark:text-gray-300 font-semibold hover:text-gray-800 dark:hover:text-white">Stock Evaluator</a>
                 </div>
             </div>
             <div class="flex items-center space-x-4">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
-                <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">
-                    JD
-                </div>
+                <button id="theme-toggle" class="text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg p-1">
+                    <svg id="theme-toggle-dark-icon" class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+                    <svg id="theme-toggle-light-icon" class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 5.05A1 1 0 003.636 6.464l.707.707a1 1 0 001.414-1.414l-.707-.707zM3 11a1 1 0 100-2H2a1 1 0 100 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
+                </button>
+                <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">JD</div>
             </div>
         </nav>
     </header>
@@ -41,12 +39,39 @@
     </main>
 
     <script>
-        // Simple script to highlight the active navigation link
+        // --- Dark Mode & Nav Link Script ---
         document.addEventListener("DOMContentLoaded", function() {
+            const themeToggleBtn = document.getElementById('theme-toggle');
+            const darkIcon = document.getElementById('theme-toggle-dark-icon');
+            const lightIcon = document.getElementById('theme-toggle-light-icon');
+
+            // Function to set theme
+            function setTheme(isDark) {
+                if (isDark) {
+                    document.documentElement.classList.add('dark');
+                    lightIcon.classList.remove('hidden');
+                    darkIcon.classList.add('hidden');
+                    localStorage.theme = 'dark';
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    darkIcon.classList.remove('hidden');
+                    lightIcon.classList.add('hidden');
+                    localStorage.theme = 'light';
+                }
+            }
+
+            // Initial theme check
+            const isDark = localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            setTheme(isDark);
+
+            // Toggle listener
+            themeToggleBtn.addEventListener('click', () => setTheme(!document.documentElement.classList.contains('dark')));
+
+            // Nav link highlighter
             const path = window.location.pathname;
             if (path.includes("/portfolio")) {
                 document.getElementById('nav-portfolio').classList.add('nav-link-active');
-            } else if (path.includes("/stock-evaluator") || path === '/') {
+            } else {
                 document.getElementById('nav-stock').classList.add('nav-link-active');
             }
         });

@@ -5,62 +5,47 @@ from stock_analyzer import evaluate_stock_metrics
 from portfolio_analyzer import analyze_portfolio
 
 app = Flask(__name__)
-# ... (rest of the app setup is the same) ...
-# ... (stock data loading is the same) ...
-# ... (index, stock_evaluator_page, portfolio_analyzer_page, evaluate_stock routes are the same) ...
 
-@app.route('/analyze-portfolio', methods=['POST'])
-def analyze_portfolio_submission():
-    """Processes portfolio from either the dynamic form or a pasted JSON object."""
-    try:
-        input_method = request.form.get('input_method')
-        funds = []
+# --- Load All Data on Startup ---
+try:
+    with open('StockTickerSymbols.json', 'r') as f:
+        stocks_data = {stock['stockSymbol']: stock for stock in json.load(f)}
+    STOCK_SYMBOLS_LIST = sorted(stocks_data.keys())
+    
+    with open('ClientPortfolio.json', 'r') as f:
+        clients_data = {client['clientId']: client for client in json.load(f)}
+    CLIENT_ID_LIST = sorted(clients_data.keys())
+    
+    print("Successfully loaded all data files.")
+except Exception as e:
+    print(f"ERROR loading data files: {e}")
+    stocks_data, STOCK_SYMBOLS_LIST, clients_data, CLIENT_ID_LIST = {}, [], {}, []
 
-        if input_method == 'json':
-            json_data_str = request.form.get('json_data')
-            if not json_data_str:
-                return render_template('portfolio_form.html', error="JSON data cannot be empty.")
-            
-            try:
-                portfolio_data = json.loads(json_data_str)
-                funds = portfolio_data.get('funds', [])
-            except json.JSONDecodeError:
-                return render_template('portfolio_form.html', error="Invalid JSON format. Please check your data.")
+# --- Routes ---
 
-        else: # Default to 'form' method
-            num_funds = int(request.form.get('num_funds', 0))
-            for i in range(num_funds):
-                fund_data = {
-                    "fundCode": f"FUND_{i+1}",
-                    "amount": float(request.form.get(f'fund-{i}-amount')),
-                    "holdings": {}
-                }
-                j = 0
-                while True:
-                    ticker = request.form.get(f'fund-{i}-holding-{j}-ticker')
-                    weight = request.form.get(f'fund-{i}-holding-{j}-weight')
-                    if ticker and weight:
-                        fund_data["holdings"][ticker.upper()] = float(weight)
-                        j += 1
-                    else:
-                        break
-                funds.append(fund_data)
-        
-        if not funds:
-            return render_template('portfolio_form.html', error="No fund data was provided.")
+@app.route('/')
+def index():
+    return redirect(url_for('stock_evaluator_page'))
 
-        results = analyze_portfolio(funds)
-        
-        if results.get('error'):
-            return render_template('portfolio_form.html', error=results.get('error'))
+@app.route('/stock-evaluator')
+def stock_evaluator_page():
+    result = None
+    selected_symbol = request.args.get('stock_symbol')
+    if selected_symbol and selected_symbol in stocks_data:
+        result = evaluate_stock_metrics(stocks_data[selected_symbol])
+    
+    return render_template('stock_evaluator.html', stock_symbols=STOCK_SYMBOLS_LIST, result=result)
 
-        return render_template('portfolio_analyzer.html', results=results)
+@app.route('/portfolio')
+@app.route('/portfolio/<client_id>')
+def portfolio_analyzer_page(client_id=None):
+    results = None
+    if client_id and client_id in clients_data:
+        portfolio = clients_data[client_id]
+        results = analyze_portfolio(portfolio.get('funds', []))
+    
+    return render_template('portfolio_analyzer.html', client_ids=CLIENT_ID_LIST, selected_client_id=client_id, results=results)
 
-    except Exception as e:
-        print(f"Error processing portfolio: {e}")
-        return render_template('portfolio_form.html', error="Invalid data submitted. Please check your inputs.")
-
-# --- Keep the rest of app.py the same ---
-# ... (The main execution block) ...
+# --- Main Execution ---
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

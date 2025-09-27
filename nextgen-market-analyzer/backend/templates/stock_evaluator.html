@@ -4,74 +4,45 @@
 
 {% block content %}
   <div class="mb-8">
-    <h1 class="text-3xl font-bold text-gray-800">Stock Evaluator</h1>
-    <p class="text-gray-500 mt-1">Analyze individual stocks with comprehensive financial metrics.</p>
+    <h1 class="text-3xl font-bold text-gray-800 dark:text-gray-100">Stock Evaluator</h1>
+    <p class="text-gray-500 dark:text-gray-400 mt-1">Analyze individual stocks with comprehensive financial metrics.</p>
   </div>
 
-  <form action="/evaluate" method="POST" class="bg-white p-4 rounded-lg shadow-md mb-8 flex items-center">
-    <input 
-      type="text" 
-      name="stock_symbol"
-      placeholder="Enter Stock Ticker Symbol (e.g., STK001)" 
-      class="flex-grow p-2 border rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-      required
-    />
+  <form action="{{ url_for('stock_evaluator_page') }}" method="GET" class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md mb-8 flex items-center">
+    <select name="stock_symbol" class="flex-grow p-2 border rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
+        <option value="" disabled {% if not result %}selected{% endif %}>-- Select a Stock Symbol --</option>
+        {% for symbol in stock_symbols %}
+            <option value="{{ symbol }}" {% if result and result.stockSymbol == symbol %}selected{% endif %}>{{ symbol }}</option>
+        {% endfor %}
+    </select>
     <button type="submit" class="bg-blue-600 text-white font-semibold px-6 py-2 rounded-r-md hover:bg-blue-700">
       Analyze Stock
     </button>
   </form>
 
   {% if result %}
-  <div class="space-y-8 animate-fade-in">
-    <div class="flex justify-between items-center">
-      <div>
-        <h2 class="text-2xl font-bold text-gray-900">{{ result.stockSymbol }}</h2>
-      </div>
-      </div>
-
+  <div class="space-y-8">
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      <div class="bg-white p-6 rounded-lg shadow-md">
-        <p class="text-sm text-gray-500">P/E Ratio</p>
-        <p class="text-3xl font-bold text-gray-900 mt-1">{{ result.parameters.priceEarningsRatio }}</p>
-      </div>
-       <div class="bg-white p-6 rounded-lg shadow-md">
-        <p class="text-sm text-gray-500">EPS</p>
-        <p class="text-3xl font-bold text-gray-900 mt-1">${{ result.parameters.earningsPerShare }}</p>
-      </div>
-       <div class="bg-white p-6 rounded-lg shadow-md">
-        <p class="text-sm text-gray-500">Dividend Yield</p>
-        <p class="text-3xl font-bold text-gray-900 mt-1">{{ result.parameters.dividendYield }}%</p>
-      </div>
-       <div class="bg-white p-6 rounded-lg shadow-md">
-        <p class="text-sm text-gray-500">Market Cap</p>
-        <p class="text-3xl font-bold text-gray-900 mt-1">${ "{:,.1f}".format(result.parameters.marketCap / 1e12) }T</p>
-      </div>
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md"><p class="text-sm text-gray-500 dark:text-gray-400">P/E Ratio</p><p class="text-3xl font-bold text-gray-900 dark:text-white mt-1">{{ result.parameters.priceEarningsRatio }}</p></div>
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md"><p class="text-sm text-gray-500 dark:text-gray-400">EPS</p><p class="text-3xl font-bold text-gray-900 dark:text-white mt-1">${{ result.parameters.earningsPerShare }}</p></div>
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md"><p class="text-sm text-gray-500 dark:text-gray-400">Dividend Yield</p><p class="text-3xl font-bold text-gray-900 dark:text-white mt-1">{{ result.parameters.dividendYield }}%</p></div>
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md"><p class="text-sm text-gray-500 dark:text-gray-400">Market Cap</p><p class="text-3xl font-bold text-gray-900 dark:text-white mt-1">${{ (result.parameters.marketCap / 1e12)|round(1) }}T</p></div>
     </div>
-
-    <div class="bg-white p-6 rounded-lg shadow-md">
-        <h3 class="text-lg font-semibold text-gray-800 mb-2">Analysis Summary</h3>
-        <p class="text-gray-600 text-sm">{{ result.summary }}</p>
+    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+        <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">Analysis Summary</h3>
+        <p class="text-gray-600 dark:text-gray-300 text-sm">{{ result.summary }}</p>
     </div>
-
-    <div class="bg-white p-6 rounded-lg shadow-md">
-         <h3 class="text-lg font-semibold text-gray-800 mb-4">Detailed Feedback</h3>
-         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+        <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">Detailed Feedback</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             {% for key, value in result.feedback.items() %}
-                <div class="p-3 bg-gray-50 rounded-md">
-                    <p class="font-semibold text-gray-700 capitalize">{{ key.replace('Ratio', ' Ratio') }}</p>
-                    <p class="text-gray-600">{{ value }}</p>
+                <div class="p-3 bg-gray-50 dark:bg-gray-700 rounded-md">
+                    <p class="font-semibold text-gray-700 dark:text-gray-200 capitalize">{{ key|replace('Ratio', ' Ratio') }}</p>
+                    <p class="text-gray-600 dark:text-gray-300">{{ value }}</p>
                 </div>
             {% endfor %}
-         </div>
+        </div>
     </div>
   </div>
   {% endif %}
-
-  {% if error %}
-  <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg shadow-md" role="alert">
-    <strong class="font-bold">Error:</strong>
-    <span class="block sm:inline">{{ error }}</span>
-  </div>
-  {% endif %}
-
 {% endblock %}
