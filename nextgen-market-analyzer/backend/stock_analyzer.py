@@ -1,110 +1,75 @@
 # backend/stock_analyzer.py
+import os
+import json
+import requests
 
+# The old evaluate_stock_metrics function is now replaced by this one.
 def evaluate_stock_metrics(stock):
     """
-    Analyzes a stock's financial parameters based on predefined rules.
+    Analyzes a stock's financial parameters by sending the data to an LLM
+    via the OpenRouter API and asking for a structured JSON response.
     """
-    p = stock['parameters']
-    feedback = {}
+    api_key = os.getenv("OPENROUTER_API_KEY")
+    if not api_key:
+        raise ValueError("OPENROUTER_API_KEY not found in environment variables.")
 
-    # 1. Price-Earnings Ratio
-    pe_ratio = p.get('priceEarningsRatio', 0)
-    if pe_ratio < 15:
-        feedback['priceEarningsRatio'] = f"The P/E ratio of {pe_ratio} suggests the stock is cheap relative to earnings."
-    elif 15 <= pe_ratio <= 30:
-        feedback['priceEarningsRatio'] = f"The P/E ratio of {pe_ratio} is fairly typical."
-    else:
-        feedback['priceEarningsRatio'] = f"The P/E ratio of {pe_ratio} indicates the stock is relatively expensive."
+    stock_parameters = stock.get('parameters', {})
 
-    # 2. Earnings Per Share
-    eps = p.get('earningsPerShare', 0)
-    if eps < 1:
-        feedback['earningsPerShare'] = f"The EPS of {eps} is low; profitability may be a concern."
-    elif eps < 5:
-        feedback['earningsPerShare'] = f"The EPS of {eps} shows modest profitability."
-    else:
-        feedback['earningsPerShare'] = f"The EPS of {eps} is a strong indicator of profitability."
+    # We create a detailed prompt that tells the AI exactly what to do.
+    # This acts as our "knowledge base".
+    prompt = f"""
+    You are an expert financial analyst AI. Your task is to analyze the provided stock data and generate a detailed feedback report.
 
-    # 3. Dividend Yield
-    div_yield = p.get('dividendYield', 0)
-    if div_yield < 1:
-        feedback['dividendYield'] = f"The dividend yield of {div_yield}% is lower than the market average."
-    elif div_yield <= 3:
-        feedback['dividendYield'] = f"The dividend yield of {div_yield}% is around the market norm."
-    else:
-        feedback['dividendYield'] = f"The dividend yield of {div_yield}% is attractive for income-focused investors."
+    Here are the analysis guidelines:
+    - P/E Ratio: A low P/E (< 15) is cheap; a high P/E (> 30) is expensive.
+    - EPS: Higher EPS is better. Below 1 is low.
+    - Dividend Yield: Above 3% is attractive for income. 0% means no dividend.
+    - Market Cap: Use terms like "sizable player", "large, stable company", or "one of the world's giants".
+    - Debt-to-Equity: Below 0.5 is low leverage. Above 1.5 is high leverage.
+    - ROE: Above 15% is very strong. Below 8% is below average.
+    - Current Ratio: Above 1 suggests good short-term liquidity. Below 1 signals potential issues.
 
-    # 4. Market Cap
-    market_cap = p.get('marketCap', 0)
-    mc_trillions = market_cap / 1e12
-    if market_cap >= 5e14: # 500 Trillion
-        feedback['marketCap'] = f"The market cap of ${mc_trillions:.1f} trillion makes this one of the world's giants."
-    elif market_cap >= 1e14: # 100 Trillion
-        feedback['marketCap'] = f"The market cap of ${mc_trillions:.1f} trillion indicates a very large, stable company."
-    else:
-        feedback['marketCap'] = f"The market cap of ${mc_trillions:.2f} trillion indicates a sizable player."
+    Stock Data:
+    {json.dumps(stock_parameters, indent=2)}
 
-    # 5. Debt-to-Equity Ratio
-    de_ratio = p.get('debtToEquityRatio', 0)
-    if de_ratio < 0.5:
-        feedback['debtToEquityRatio'] = f"The debt-to-equity ratio of {de_ratio} suggests very little leverage."
-    elif de_ratio <= 1.5:
-        feedback['debtToEquityRatio'] = f"The debt-to-equity ratio of {de_ratio} suggests a moderate level of leverage."
-    else:
-        feedback['debtToEquityRatio'] = f"The debt-to-equity ratio of {de_ratio} indicates high leverage."
+    Based on the data and guidelines, generate a JSON object with two keys: "feedback" and "summary".
+    - The "feedback" object should contain a one-sentence analysis for each of the 10 financial metrics.
+    - The "summary" should be a 2-3 sentence paragraph synthesizing the most important points.
 
-    # 6. Return on Equity
-    roe = p.get('returnOnEquity', 0) * 100
-    if roe < 8:
-        feedback['returnOnEquity'] = f"The ROE of {roe:.0f}% is below average."
-    elif roe <= 15:
-        feedback['returnOnEquity'] = f"The ROE of {roe:.0f}% is healthy."
-    else:
-        feedback['returnOnEquity'] = f"The ROE of {roe:.0f}% is very strong."
+    Return ONLY the raw JSON object, with no other text or explanations.
+    """
 
-    # 7. Return on Assets
-    roa = p.get('returnOnAssets', 0) * 100
-    if roa < 5:
-        feedback['returnOnAssets'] = f"The ROA of {roa:.0f}% is modest."
-    elif roa <= 10:
-        feedback['returnOnAssets'] = f"The ROA of {roa:.0f}% indicates efficient asset utilization."
-    else:
-        feedback['returnOnAssets'] = f"The ROA of {roa:.0f}% is excellent."
+    try:
+        response = requests.post(
+            url="https://openrouter.ai/api/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {api_key}"
+            },
+            data=json.dumps({
+                "model": "mistralai/mistral-7b-instruct", # A fast and capable model
+                "messages": [{"role": "user", "content": prompt}],
+                "response_format": {"type": "json_object"} # Enforce JSON output
+            })
+        )
 
-    # 8. Current Ratio
-    current_ratio = p.get('currentRatio', 0)
-    if current_ratio < 1:
-        feedback['currentRatio'] = f"The current ratio of {current_ratio} signals potential short-term liquidity issues."
-    elif current_ratio <= 2:
-        feedback['currentRatio'] = f"The current ratio of {current_ratio} suggests a good short-term liquidity position."
-    else:
-        feedback['currentRatio'] = f"The current ratio of {current_ratio} indicates a very comfortable liquidity cushion."
+        response.raise_for_status() # This will raise an error for bad responses (4xx or 5xx)
 
-    # 9. Quick Ratio
-    quick_ratio = p.get('quickRatio', 0)
-    if quick_ratio < 1:
-        feedback['quickRatio'] = f"The quick ratio of {quick_ratio} may be insufficient for immediate obligations."
-    elif quick_ratio <= 2:
-        feedback['quickRatio'] = f"The quick ratio of {quick_ratio} indicates a strong ability to meet short-term obligations."
-    else:
-        feedback['quickRatio'] = f"The quick ratio of {quick_ratio} shows an exceptionally strong liquidity position."
+        # The AI's response is a JSON string, which we need to parse into a Python dict
+        ai_response_content = response.json()['choices'][0]['message']['content']
+        analysis_data = json.loads(ai_response_content)
 
-    # 10. Book Value Per Share
-    bvps = p.get('bookValuePerShare', 0)
-    feedback['bookValuePerShare'] = f"The book value per share of {bvps} is a measure of the company's net asset value."
-
-    # Build summary
-    summary = (
-        f"Overall, {stock['stockSymbol']} has some notable financial metrics. "
-        f"{feedback['earningsPerShare']} {feedback['returnOnEquity']} "
-        f"However, {feedback['priceEarningsRatio'].lower()} "
-        f"The company's leverage is characterized by the following: {feedback['debtToEquityRatio'].lower()} "
-        f"Finally, its liquidity position appears as follows: {feedback['currentRatio'].lower()}"
-    )
-
-    return {
-            "stockSymbol": stock['stockSymbol'],
-            "parameters": p, # Add this line to pass raw parameters
-            "feedback": feedback,
-            "summary": summary
+        # We construct the final dictionary to match the template's expectations
+        final_result = {
+            "stockSymbol": stock.get('stockSymbol'),
+            "parameters": stock_parameters,
+            "feedback": analysis_data.get('feedback', {}),
+            "summary": analysis_data.get('summary', "AI analysis could not be generated.")
         }
+        return final_result
+
+    except requests.exceptions.RequestException as e:
+        print(f"API request failed: {e}")
+        return {"error": "Failed to connect to the analysis service."}
+    except (json.JSONDecodeError, KeyError) as e:
+        print(f"Failed to parse AI response: {e}")
+        return {"error": "Received an invalid response from the analysis service."}

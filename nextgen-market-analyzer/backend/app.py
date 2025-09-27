@@ -1,4 +1,8 @@
 # backend/app.py
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 import json
 from flask import Flask, request, render_template, redirect, url_for
 from stock_analyzer import evaluate_stock_metrics
