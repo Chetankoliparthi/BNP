@@ -48,6 +48,7 @@ def evaluate_stock_metrics(stock):
             data=json.dumps({
                 "model": "mistralai/mistral-7b-instruct", # A fast and capable model
                 "messages": [{"role": "user", "content": prompt}],
+                "temperature": 0.1,
                 "response_format": {"type": "json_object"} # Enforce JSON output
             })
         )
